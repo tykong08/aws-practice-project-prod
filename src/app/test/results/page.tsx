@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, ArrowLeft, Trophy, AlertTriangle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckCircle, XCircle, ArrowLeft, Trophy, AlertTriangle, ChevronDown, ChevronUp, Brain } from 'lucide-react';
 
 interface ScoreResult {
     correctCount: number;
@@ -16,9 +17,39 @@ interface ScoreResult {
     status: 'pass' | 'borderline' | 'fail';
 }
 
+interface Question {
+    id: string;
+    question: string;
+    option1: string;
+    option2: string;
+    option3: string;
+    option4: string;
+    option5?: string;
+    option6?: string;
+    correctAnswers: number[];
+    explanation?: string;
+    keywords?: string[];
+    topic: string;
+    difficulty: string;
+}
+
+interface TestAttempt {
+    id: string;
+    questionId: string;
+    selectedAnswers: number[];
+    isCorrect: boolean;
+    question: Question;
+}
+
 function TestResultsContent() {
     const searchParams = useSearchParams();
     const [result, setResult] = useState<ScoreResult | null>(null);
+    const [detailedResults, setDetailedResults] = useState<TestAttempt[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
+    const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+    const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
+    const sessionId = searchParams.get('sessionId');
 
     useEffect(() => {
         const correct = parseInt(searchParams.get('correct') || '0');
@@ -67,6 +98,79 @@ function TestResultsContent() {
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
         return `${hours}시간 ${minutes}분 ${secs}초`;
+    };
+
+    const fetchDetailedResults = async () => {
+        if (!sessionId) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/test-sessions/${sessionId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setDetailedResults(data.attempts);
+            } else {
+                console.error('Failed to fetch detailed results');
+            }
+        } catch (error) {
+            console.error('Error fetching detailed results:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleQuestion = (questionId: string) => {
+        const newExpanded = new Set(expandedQuestions);
+        if (newExpanded.has(questionId)) {
+            newExpanded.delete(questionId);
+        } else {
+            newExpanded.add(questionId);
+        }
+        setExpandedQuestions(newExpanded);
+    };
+
+    const filteredResults = detailedResults.filter(attempt => {
+        if (filter === 'correct') return attempt.isCorrect;
+        if (filter === 'incorrect') return !attempt.isCorrect;
+        return true;
+    });
+
+    const renderOption = (optionText: string, index: number, attempt: TestAttempt) => {
+        const isSelected = attempt.selectedAnswers.includes(index);
+        const isCorrect = attempt.question.correctAnswers.includes(index);
+        
+        let className = "p-3 rounded-lg border-2 ";
+        
+        if (isCorrect && isSelected) {
+            className += "border-green-500 bg-green-50 text-green-900";
+        } else if (isCorrect) {
+            className += "border-green-500 bg-green-50 text-green-900";
+        } else if (isSelected) {
+            className += "border-red-500 bg-red-50 text-red-900";
+        } else {
+            className += "border-gray-200 text-gray-700";
+        }
+
+        return (
+            <div key={index} className={className}>
+                <div className="flex items-center justify-between">
+                    <span>{optionText}</span>
+                    <div className="flex items-center space-x-2">
+                        {isSelected && (
+                            <span className={`text-sm font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                선택됨
+                            </span>
+                        )}
+                        {isCorrect && (
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                        )}
+                        {isSelected && !isCorrect && (
+                            <XCircle className="h-5 w-5 text-red-600" />
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     const timeSpent = parseInt(searchParams.get('timeSpent') || '0');
@@ -235,7 +339,7 @@ function TestResultsContent() {
                     </Card>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                         <Link href="/test">
                             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                                 다시 시험보기
@@ -251,7 +355,182 @@ function TestResultsContent() {
                                 틀린 문제 복습
                             </Button>
                         </Link>
+                        {sessionId && (
+                            <Button 
+                                onClick={() => {
+                                    setShowDetails(!showDetails);
+                                    if (!showDetails && detailedResults.length === 0) {
+                                        fetchDetailedResults();
+                                    }
+                                }}
+                                variant="outline" 
+                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                            >
+                                <Brain className="h-4 w-4 mr-2" />
+                                {showDetails ? '문제별 결과 숨기기' : '문제별 결과 보기'}
+                            </Button>
+                        )}
                     </div>
+
+                    {/* Detailed Question Results */}
+                    {showDetails && sessionId && (
+                        <Card className="border border-gray-200 mb-8">
+                            <CardHeader>
+                                <CardTitle className="text-xl text-gray-900">문제별 상세 결과</CardTitle>
+                                <CardDescription>
+                                    각 문제의 정답, 오답, 해설을 확인할 수 있습니다.
+                                </CardDescription>
+                                
+                                {/* Filter Buttons */}
+                                <div className="flex gap-2 mt-4">
+                                    <Button
+                                        size="sm"
+                                        variant={filter === 'all' ? 'default' : 'outline'}
+                                        onClick={() => setFilter('all')}
+                                    >
+                                        전체 ({detailedResults.length})
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant={filter === 'correct' ? 'default' : 'outline'}
+                                        onClick={() => setFilter('correct')}
+                                        className={filter === 'correct' ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 border-green-300 hover:bg-green-50'}
+                                    >
+                                        정답 ({detailedResults.filter(a => a.isCorrect).length})
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant={filter === 'incorrect' ? 'default' : 'outline'}
+                                        onClick={() => setFilter('incorrect')}
+                                        className={filter === 'incorrect' ? 'bg-red-600 hover:bg-red-700' : 'text-red-600 border-red-300 hover:bg-red-50'}
+                                    >
+                                        오답 ({detailedResults.filter(a => !a.isCorrect).length})
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            
+                            <CardContent>
+                                {loading ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-gray-600">문제별 결과를 불러오고 있습니다...</div>
+                                    </div>
+                                ) : filteredResults.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-gray-600">
+                                            {filter === 'correct' ? '정답 문제가 없습니다.' : 
+                                             filter === 'incorrect' ? '오답 문제가 없습니다.' : 
+                                             '결과가 없습니다.'}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {filteredResults.map((attempt, index) => {
+                                            // Find the original question number in the full test
+                                            const originalIndex = detailedResults.findIndex(a => a.id === attempt.id);
+                                            
+                                            return (
+                                            <div
+                                                key={attempt.id}
+                                                className={`border rounded-lg p-4 ${
+                                                    attempt.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center space-x-3">
+                                                        <span className="text-sm font-medium text-gray-700">
+                                                            문제 {originalIndex + 1}
+                                                        </span>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                            attempt.isCorrect 
+                                                                ? 'bg-green-100 text-green-800' 
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                            {attempt.isCorrect ? '정답' : '오답'}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {attempt.question.topic} • {attempt.question.difficulty}
+                                                        </span>
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => toggleQuestion(attempt.questionId)}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                    >
+                                                        {expandedQuestions.has(attempt.questionId) ? (
+                                                            <>
+                                                                <ChevronUp className="h-4 w-4 mr-1" />
+                                                                접기
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ChevronDown className="h-4 w-4 mr-1" />
+                                                                자세히
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                                
+                                                <div className="mb-3">
+                                                    <h4 className="font-medium text-gray-900 mb-2">문제</h4>
+                                                    <p className="text-gray-700 whitespace-pre-wrap">
+                                                        {attempt.question.question}
+                                                    </p>
+                                                </div>
+
+                                                {expandedQuestions.has(attempt.questionId) && (
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <h5 className="font-medium text-gray-900 mb-3">선택지</h5>
+                                                            <div className="space-y-2">
+                                                                {[
+                                                                    attempt.question.option1,
+                                                                    attempt.question.option2,
+                                                                    attempt.question.option3,
+                                                                    attempt.question.option4,
+                                                                    attempt.question.option5,
+                                                                    attempt.question.option6,
+                                                                ].filter(Boolean).map((option, idx) => 
+                                                                    renderOption(option!, idx, attempt)
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {attempt.question.explanation && (
+                                                            <div>
+                                                                <h5 className="font-medium text-gray-900 mb-2">해설</h5>
+                                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                    <p className="text-blue-900 whitespace-pre-wrap">
+                                                                        {attempt.question.explanation}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {attempt.question.keywords && attempt.question.keywords.length > 0 && (
+                                                            <div>
+                                                                <h5 className="font-medium text-gray-900 mb-2">키워드</h5>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {attempt.question.keywords.map((keyword, idx) => (
+                                                                        <span
+                                                                            key={idx}
+                                                                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
+                                                                        >
+                                                                            {keyword}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )})}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Additional Tips */}
                     <Card className="border border-gray-200 mt-8">

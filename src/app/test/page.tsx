@@ -320,8 +320,9 @@ export default function TestPage() {
         const totalTime = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
 
         // Save test session
+        let sessionId = '';
         try {
-            await fetch('/api/test-sessions', {
+            const response = await fetch('/api/test-sessions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -335,6 +336,11 @@ export default function TestPage() {
                     results: detailedResults
                 }),
             });
+            
+            if (response.ok) {
+                const sessionData = await response.json();
+                sessionId = sessionData.id;
+            }
         } catch (error) {
             console.error('Error saving test session:', error);
         }
@@ -343,7 +349,7 @@ export default function TestPage() {
         clearProgress();
 
         // Navigate to results
-        router.push(`/test/results?correct=${correctCount}&total=${questions.length}&timeSpent=${totalTime}`);
+        router.push(`/test/results?correct=${correctCount}&total=${questions.length}&timeSpent=${totalTime}&sessionId=${sessionId}`);
     };
 
     if (!user) {
