@@ -35,6 +35,18 @@ interface TestAnswer {
     selectedAnswers: number[];
 }
 
+interface SavedTestProgress {
+    userId: string;
+    answers: TestAnswer[];
+    currentQuestionIndex: number;
+    startTime: string;
+    timeLeft: number;
+    testStarted: boolean;
+}
+
+// LocalStorage 키 상수
+const TEST_PROGRESS_KEY = 'test_progress';
+
 export default function TestPage() {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
@@ -47,14 +59,115 @@ export default function TestPage() {
     const [timeLeft, setTimeLeft] = useState(130 * 60); // 130분을 초로 변환
     const [timeExpired, setTimeExpired] = useState(false);
 
+    // 진행 상황 저장 함수
+    const saveProgress = () => {
+        if (!user || !testStarted || !startTime) return;
+
+        const progress: SavedTestProgress = {
+            userId: user.id,
+            answers,
+            currentQuestionIndex,
+            startTime: startTime.toISOString(),
+            timeLeft,
+            testStarted
+        };
+
+        localStorage.setItem(TEST_PROGRESS_KEY, JSON.stringify(progress));
+        console.log('📝 Test progress saved');
+    };
+
+    // 진행 상황 복원 함수
+    const restoreProgress = (): SavedTestProgress | null => {
+        try {
+            const saved = localStorage.getItem(TEST_PROGRESS_KEY);
+            if (saved) {
+                const progress: SavedTestProgress = JSON.parse(saved);
+                console.log('🔄 Found saved test progress:', progress);
+                return progress;
+            }
+        } catch (error) {
+            console.error('❌ Error restoring progress:', error);
+        }
+        return null;
+    };
+
+    // 진행 상황 삭제 함수
+    const clearProgress = () => {
+        localStorage.removeItem(TEST_PROGRESS_KEY);
+        console.log('🗑️ Test progress cleared');
+    };
+
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) {
-            setUser(JSON.parse(userData));
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            
+            // 사용자가 설정된 후 저장된 진행 상황 확인
+            const savedProgress = restoreProgress();
+            if (savedProgress && savedProgress.userId === parsedUser.id) {
+                const shouldRestore = confirm(
+                    '이전에 진행하던 모의고사가 있습니다. 이어서 하시겠습니까?\n' +
+                    '아니오를 선택하면 새로 시작합니다.'
+                );
+                
+                if (shouldRestore) {
+                    // 저장된 상태 복원
+                    setAnswers(savedProgress.answers);
+                    setCurrentQuestionIndex(savedProgress.currentQuestionIndex);
+                    setStartTime(new Date(savedProgress.startTime));
+                    setTimeLeft(savedProgress.timeLeft);
+                    setTestStarted(savedProgress.testStarted);
+                    
+                    // 복원된 상태에 맞는 문제들을 다시 불러오기
+                    loadQuestionsForRestoredTest(savedProgress.answers);
+                    
+                    console.log('✅ Test progress restored');
+                } else {
+                    // 새로 시작하면 기존 진행 상황 삭제
+                    clearProgress();
+                }
+            }
         } else {
             router.push('/login');
         }
     }, [router]);
+
+    // 복원된 테스트를 위한 문제 로딩 함수
+    const loadQuestionsForRestoredTest = async (savedAnswers: TestAnswer[]) => {
+        setLoading(true);
+        try {
+            // 저장된 답변에서 문제 ID들을 추출
+            const questionIds = savedAnswers.map(answer => answer.questionId);
+            
+            // 해당 ID들로 문제를 불러오기
+            const response = await fetch('/api/questions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ questionIds }),
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                // 원래 순서대로 정렬
+                const sortedQuestions = questionIds.map(id => 
+                    data.find((q: Question) => q.id === id)
+                ).filter(Boolean);
+                setQuestions(sortedQuestions);
+            } else {
+                console.error('Failed to load questions for restored test');
+                alert('저장된 테스트를 복원하는데 실패했습니다. 새로 시작하세요.');
+                clearProgress();
+            }
+        } catch (error) {
+            console.error('Error loading questions for restored test:', error);
+            alert('저장된 테스트를 복원하는데 실패했습니다. 새로 시작하세요.');
+            clearProgress();
+        }
+        setLoading(false);
+    };
 
     // 타이머 useEffect
     useEffect(() => {
@@ -81,6 +194,14 @@ export default function TestPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [timeExpired]);
 
+    // 진행 상황 자동 저장
+    useEffect(() => {
+        if (testStarted && user && startTime) {
+            saveProgress();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [answers, currentQuestionIndex, timeLeft, testStarted]);
+
     // 시간 포맷팅 함수
     const formatTime = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
@@ -102,6 +223,10 @@ export default function TestPage() {
 
     const startTest = async () => {
         setLoading(true);
+        
+        // Clear any existing progress when starting fresh
+        clearProgress();
+        
         try {
             const response = await fetch('/api/questions/random?count=65');
             if (response.ok) {
@@ -213,6 +338,9 @@ export default function TestPage() {
         } catch (error) {
             console.error('Error saving test session:', error);
         }
+
+        // Clear saved progress after completing test
+        clearProgress();
 
         // Navigate to results
         router.push(`/test/results?correct=${correctCount}&total=${questions.length}&timeSpent=${totalTime}`);
