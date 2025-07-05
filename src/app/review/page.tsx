@@ -360,7 +360,10 @@ export default function ReviewPage() {
                             <div>
                                 <span className="text-sm font-medium text-gray-700">선택한 답:</span>
                                 <div className="text-red-600 font-medium">
-                                    {attempt.selectedAnswers.map(ans => ans + 1).join(', ')}
+                                    {attempt.selectedAnswers.length === 0
+                                        ? '답을 선택하지 않음'
+                                        : attempt.selectedAnswers.map(ans => ans + 1).join(', ')
+                                    }
                                 </div>
                             </div>
                             <div>

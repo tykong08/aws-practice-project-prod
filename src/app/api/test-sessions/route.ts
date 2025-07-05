@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
                     data: {
                         questionId: result.question.id,
                         userId,
-                        selectedAnswers: JSON.stringify(result.userAnswer),
+                        selectedAnswers: JSON.stringify(result.userAnswer.map((answer: number) => answer + 1)), // Convert 0-based to 1-based
                         isCorrect: result.isCorrect,
                         timeSpent: Math.floor(timeSpent / totalQuestions), // Average time per question
                     },

@@ -39,15 +39,19 @@ export async function GET(request: NextRequest) {
             .filter(attempt => !attempt.isCorrect);
 
         // Transform the data to include parsed JSON fields
-        const transformedAttempts = stillIncorrectAttempts.map(attempt => ({
-            ...attempt,
-            selectedAnswers: JSON.parse(attempt.selectedAnswers).map((answer: number) => answer - 1), // UserAttempt은 1-based로 저장됨
-            question: {
-                ...attempt.question,
-                correctAnswers: JSON.parse(attempt.question.correctAnswers), // Question은 이미 0-based로 저장됨
-                keywords: attempt.question.keywords ? JSON.parse(attempt.question.keywords) : []
-            }
-        }));
+        const transformedAttempts = stillIncorrectAttempts.map(attempt => {
+            const selectedAnswers = JSON.parse(attempt.selectedAnswers);
+
+            return {
+                ...attempt,
+                selectedAnswers: selectedAnswers.map((answer: number) => answer - 1), // UserAttempt은 1-based로 저장되므로 0-based로 변환
+                question: {
+                    ...attempt.question,
+                    correctAnswers: JSON.parse(attempt.question.correctAnswers), // Question은 이미 0-based로 저장됨
+                    keywords: attempt.question.keywords ? JSON.parse(attempt.question.keywords) : []
+                }
+            };
+        });
 
         return NextResponse.json(transformedAttempts);
     } catch (error) {

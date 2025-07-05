@@ -108,7 +108,23 @@ export default function PracticePage() {
     };
 
     const submitAnswer = async () => {
-        if (!currentQuestion || selectedAnswers.length === 0 || !user || !questionStartTime) return;
+        console.log('🔍 submitAnswer called with:', {
+            currentQuestion: !!currentQuestion,
+            selectedAnswersLength: selectedAnswers.length,
+            selectedAnswers,
+            user: !!user,
+            questionStartTime: !!questionStartTime
+        });
+
+        if (!currentQuestion || selectedAnswers.length === 0 || !user || !questionStartTime) {
+            console.log('❌ Submit blocked:', {
+                noQuestion: !currentQuestion,
+                noAnswers: selectedAnswers.length === 0,
+                noUser: !user,
+                noStartTime: !questionStartTime
+            });
+            return;
+        }
 
         const isCorrect =
             selectedAnswers.length === currentQuestion.correctAnswers.length &&
