@@ -45,7 +45,7 @@ export async function GET(
             let selectedAnswers;
             try {
                 const parsed = JSON.parse(attempt.selectedAnswers);
-                
+
                 // Handle legacy/invalid data - if array contains 0 or 4, it's likely 0-based already
                 if (Array.isArray(parsed) && parsed.some(answer => answer === 0 || answer >= 5)) {
                     selectedAnswers = parsed; // Keep as is (already 0-based or invalid data)

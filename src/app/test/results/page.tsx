@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, XCircle, ArrowLeft, Trophy, AlertTriangle, ChevronDown, ChevronUp, Brain } from 'lucide-react';
 
 interface ScoreResult {
@@ -138,9 +137,9 @@ function TestResultsContent() {
     const renderOption = (optionText: string, index: number, attempt: TestAttempt) => {
         const isSelected = attempt.selectedAnswers.includes(index);
         const isCorrect = attempt.question.correctAnswers.includes(index);
-        
+
         let className = "p-3 rounded-lg border-2 ";
-        
+
         if (isCorrect && isSelected) {
             className += "border-green-500 bg-green-50 text-green-900";
         } else if (isCorrect) {
@@ -198,13 +197,13 @@ function TestResultsContent() {
 
                     {/* Main Result Card */}
                     <Card className={`border-2 mb-8 ${result.status === 'pass' ? 'border-green-200 bg-green-50' :
-                            result.status === 'borderline' ? 'border-yellow-200 bg-yellow-50' :
-                                'border-red-200 bg-red-50'
+                        result.status === 'borderline' ? 'border-yellow-200 bg-yellow-50' :
+                            'border-red-200 bg-red-50'
                         }`}>
                         <CardHeader className="text-center pb-4">
                             <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${result.status === 'pass' ? 'bg-green-100' :
-                                    result.status === 'borderline' ? 'bg-yellow-100' :
-                                        'bg-red-100'
+                                result.status === 'borderline' ? 'bg-yellow-100' :
+                                    'bg-red-100'
                                 }`}>
                                 {result.status === 'pass' ? (
                                     <Trophy className="h-8 w-8 text-green-600" />
@@ -215,14 +214,14 @@ function TestResultsContent() {
                                 )}
                             </div>
                             <CardTitle className={`text-2xl ${result.status === 'pass' ? 'text-green-900' :
-                                    result.status === 'borderline' ? 'text-yellow-900' :
-                                        'text-red-900'
+                                result.status === 'borderline' ? 'text-yellow-900' :
+                                    'text-red-900'
                                 }`}>
                                 {result.evaluation}
                             </CardTitle>
                             <CardDescription className={`text-lg ${result.status === 'pass' ? 'text-green-700' :
-                                    result.status === 'borderline' ? 'text-yellow-700' :
-                                        'text-red-700'
+                                result.status === 'borderline' ? 'text-yellow-700' :
+                                    'text-red-700'
                                 }`}>
                                 {result.estimatedScore}
                             </CardDescription>
@@ -356,14 +355,14 @@ function TestResultsContent() {
                             </Button>
                         </Link>
                         {sessionId && (
-                            <Button 
+                            <Button
                                 onClick={() => {
                                     setShowDetails(!showDetails);
                                     if (!showDetails && detailedResults.length === 0) {
                                         fetchDetailedResults();
                                     }
                                 }}
-                                variant="outline" 
+                                variant="outline"
                                 className="border-blue-300 text-blue-600 hover:bg-blue-50"
                             >
                                 <Brain className="h-4 w-4 mr-2" />
@@ -380,7 +379,7 @@ function TestResultsContent() {
                                 <CardDescription>
                                     각 문제의 정답, 오답, 해설을 확인할 수 있습니다.
                                 </CardDescription>
-                                
+
                                 {/* Filter Buttons */}
                                 <div className="flex gap-2 mt-4">
                                     <Button
@@ -408,7 +407,7 @@ function TestResultsContent() {
                                     </Button>
                                 </div>
                             </CardHeader>
-                            
+
                             <CardContent>
                                 {loading ? (
                                     <div className="text-center py-8">
@@ -417,115 +416,114 @@ function TestResultsContent() {
                                 ) : filteredResults.length === 0 ? (
                                     <div className="text-center py-8">
                                         <div className="text-gray-600">
-                                            {filter === 'correct' ? '정답 문제가 없습니다.' : 
-                                             filter === 'incorrect' ? '오답 문제가 없습니다.' : 
-                                             '결과가 없습니다.'}
+                                            {filter === 'correct' ? '정답 문제가 없습니다.' :
+                                                filter === 'incorrect' ? '오답 문제가 없습니다.' :
+                                                    '결과가 없습니다.'}
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {filteredResults.map((attempt, index) => {
+                                        {filteredResults.map((attempt) => {
                                             // Find the original question number in the full test
                                             const originalIndex = detailedResults.findIndex(a => a.id === attempt.id);
-                                            
+
                                             return (
-                                            <div
-                                                key={attempt.id}
-                                                className={`border rounded-lg p-4 ${
-                                                    attempt.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="flex items-center space-x-3">
-                                                        <span className="text-sm font-medium text-gray-700">
-                                                            문제 {originalIndex + 1}
-                                                        </span>
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                            attempt.isCorrect 
-                                                                ? 'bg-green-100 text-green-800' 
+                                                <div
+                                                    key={attempt.id}
+                                                    className={`border rounded-lg p-4 ${attempt.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center space-x-3">
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                문제 {originalIndex + 1}
+                                                            </span>
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${attempt.isCorrect
+                                                                ? 'bg-green-100 text-green-800'
                                                                 : 'bg-red-100 text-red-800'
-                                                        }`}>
-                                                            {attempt.isCorrect ? '정답' : '오답'}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            {attempt.question.topic} • {attempt.question.difficulty}
-                                                        </span>
-                                                    </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => toggleQuestion(attempt.questionId)}
-                                                        className="text-gray-600 hover:text-gray-800"
-                                                    >
-                                                        {expandedQuestions.has(attempt.questionId) ? (
-                                                            <>
-                                                                <ChevronUp className="h-4 w-4 mr-1" />
-                                                                접기
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <ChevronDown className="h-4 w-4 mr-1" />
-                                                                자세히
-                                                            </>
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                                
-                                                <div className="mb-3">
-                                                    <h4 className="font-medium text-gray-900 mb-2">문제</h4>
-                                                    <p className="text-gray-700 whitespace-pre-wrap">
-                                                        {attempt.question.question}
-                                                    </p>
-                                                </div>
-
-                                                {expandedQuestions.has(attempt.questionId) && (
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <h5 className="font-medium text-gray-900 mb-3">선택지</h5>
-                                                            <div className="space-y-2">
-                                                                {[
-                                                                    attempt.question.option1,
-                                                                    attempt.question.option2,
-                                                                    attempt.question.option3,
-                                                                    attempt.question.option4,
-                                                                    attempt.question.option5,
-                                                                    attempt.question.option6,
-                                                                ].filter(Boolean).map((option, idx) => 
-                                                                    renderOption(option!, idx, attempt)
-                                                                )}
-                                                            </div>
+                                                                }`}>
+                                                                {attempt.isCorrect ? '정답' : '오답'}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                {attempt.question.topic} • {attempt.question.difficulty}
+                                                            </span>
                                                         </div>
-
-                                                        {attempt.question.explanation && (
-                                                            <div>
-                                                                <h5 className="font-medium text-gray-900 mb-2">해설</h5>
-                                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                                                    <p className="text-blue-900 whitespace-pre-wrap">
-                                                                        {attempt.question.explanation}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {attempt.question.keywords && attempt.question.keywords.length > 0 && (
-                                                            <div>
-                                                                <h5 className="font-medium text-gray-900 mb-2">키워드</h5>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {attempt.question.keywords.map((keyword, idx) => (
-                                                                        <span
-                                                                            key={idx}
-                                                                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
-                                                                        >
-                                                                            {keyword}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => toggleQuestion(attempt.questionId)}
+                                                            className="text-gray-600 hover:text-gray-800"
+                                                        >
+                                                            {expandedQuestions.has(attempt.questionId) ? (
+                                                                <>
+                                                                    <ChevronUp className="h-4 w-4 mr-1" />
+                                                                    접기
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ChevronDown className="h-4 w-4 mr-1" />
+                                                                    자세히
+                                                                </>
+                                                            )}
+                                                        </Button>
                                                     </div>
-                                                )}
-                                            </div>
-                                        )})}
+
+                                                    <div className="mb-3">
+                                                        <h4 className="font-medium text-gray-900 mb-2">문제</h4>
+                                                        <p className="text-gray-700 whitespace-pre-wrap">
+                                                            {attempt.question.question}
+                                                        </p>
+                                                    </div>
+
+                                                    {expandedQuestions.has(attempt.questionId) && (
+                                                        <div className="space-y-4">
+                                                            <div>
+                                                                <h5 className="font-medium text-gray-900 mb-3">선택지</h5>
+                                                                <div className="space-y-2">
+                                                                    {[
+                                                                        attempt.question.option1,
+                                                                        attempt.question.option2,
+                                                                        attempt.question.option3,
+                                                                        attempt.question.option4,
+                                                                        attempt.question.option5,
+                                                                        attempt.question.option6,
+                                                                    ].filter(Boolean).map((option, idx) =>
+                                                                        renderOption(option!, idx, attempt)
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {attempt.question.explanation && (
+                                                                <div>
+                                                                    <h5 className="font-medium text-gray-900 mb-2">해설</h5>
+                                                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                        <p className="text-blue-900 whitespace-pre-wrap">
+                                                                            {attempt.question.explanation}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {attempt.question.keywords && attempt.question.keywords.length > 0 && (
+                                                                <div>
+                                                                    <h5 className="font-medium text-gray-900 mb-2">키워드</h5>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {attempt.question.keywords.map((keyword, idx) => (
+                                                                            <span
+                                                                                key={idx}
+                                                                                className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
+                                                                            >
+                                                                                {keyword}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </CardContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -131,10 +131,11 @@ export default function TestPage() {
         } else {
             router.push('/login');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
     // 복원된 테스트를 위한 문제 로딩 함수
-    const loadQuestionsForRestoredTest = async (savedAnswers: TestAnswer[]) => {
+    const loadQuestionsForRestoredTest = useCallback(async (savedAnswers: TestAnswer[]) => {
         setLoading(true);
         try {
             // 저장된 답변에서 문제 ID들을 추출
@@ -167,7 +168,7 @@ export default function TestPage() {
             clearProgress();
         }
         setLoading(false);
-    };
+    }, []);
 
     // 타이머 useEffect
     useEffect(() => {
@@ -336,7 +337,7 @@ export default function TestPage() {
                     results: detailedResults
                 }),
             });
-            
+
             if (response.ok) {
                 const sessionData = await response.json();
                 sessionId = sessionData.id;
