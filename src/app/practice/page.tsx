@@ -432,8 +432,8 @@ export default function PracticePage() {
                                             onClick={generateExplanation}
                                             disabled={loadingExplanation}
                                             className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center ${loadingExplanation
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                                ? 'bg-gray-400 text-white cursor-not-allowed'
+                                                : 'bg-purple-600 hover:bg-purple-700 text-white'
                                                 }`}
                                         >
                                             {loadingExplanation ? (

@@ -42,12 +42,32 @@ export async function GET(request: NextRequest) {
         const transformedAttempts = stillIncorrectAttempts.map(attempt => {
             const selectedAnswers = JSON.parse(attempt.selectedAnswers);
 
+            // Handle empty arrays or invalid data
+            if (!Array.isArray(selectedAnswers) || selectedAnswers.length === 0) {
+                return {
+                    ...attempt,
+                    selectedAnswers: [],
+                    question: {
+                        ...attempt.question,
+                        correctAnswers: JSON.parse(attempt.question.correctAnswers),
+                        keywords: attempt.question.keywords ? JSON.parse(attempt.question.keywords) : []
+                    }
+                };
+            }
+
+            // Convert 1-based to 0-based, but handle legacy 0-based data
+            const convertedAnswers = selectedAnswers.map((answer: number) => {
+                // If answer is 0, it's likely legacy 0-based data, keep as is
+                // If answer > 0, it's 1-based data, convert to 0-based
+                return answer > 0 ? answer - 1 : answer;
+            });
+
             return {
                 ...attempt,
-                selectedAnswers: selectedAnswers.map((answer: number) => answer - 1), // UserAttempt은 1-based로 저장되므로 0-based로 변환
+                selectedAnswers: convertedAnswers,
                 question: {
                     ...attempt.question,
-                    correctAnswers: JSON.parse(attempt.question.correctAnswers), // Question은 이미 0-based로 저장됨
+                    correctAnswers: JSON.parse(attempt.question.correctAnswers),
                     keywords: attempt.question.keywords ? JSON.parse(attempt.question.keywords) : []
                 }
             };
