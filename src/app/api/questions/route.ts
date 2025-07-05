@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        
+
         // If questionIds array is provided, return those specific questions
         if (body.questionIds && Array.isArray(body.questionIds)) {
             const questions = await prisma.question.findMany({
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json(transformedQuestions);
         }
-        
+
         // Otherwise, create a new question (existing functionality)
         const { question, option1, option2, option3, option4, option5, option6, correctAnswers, difficulty, topic } = body;
 

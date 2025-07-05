@@ -102,7 +102,7 @@ export default function TestPage() {
         if (userData) {
             const parsedUser = JSON.parse(userData);
             setUser(parsedUser);
-            
+
             // 사용자가 설정된 후 저장된 진행 상황 확인
             const savedProgress = restoreProgress();
             if (savedProgress && savedProgress.userId === parsedUser.id) {
@@ -110,7 +110,7 @@ export default function TestPage() {
                     '이전에 진행하던 모의고사가 있습니다. 이어서 하시겠습니까?\n' +
                     '아니오를 선택하면 새로 시작합니다.'
                 );
-                
+
                 if (shouldRestore) {
                     // 저장된 상태 복원
                     setAnswers(savedProgress.answers);
@@ -118,10 +118,10 @@ export default function TestPage() {
                     setStartTime(new Date(savedProgress.startTime));
                     setTimeLeft(savedProgress.timeLeft);
                     setTestStarted(savedProgress.testStarted);
-                    
+
                     // 복원된 상태에 맞는 문제들을 다시 불러오기
                     loadQuestionsForRestoredTest(savedProgress.answers);
-                    
+
                     console.log('✅ Test progress restored');
                 } else {
                     // 새로 시작하면 기존 진행 상황 삭제
@@ -139,7 +139,7 @@ export default function TestPage() {
         try {
             // 저장된 답변에서 문제 ID들을 추출
             const questionIds = savedAnswers.map(answer => answer.questionId);
-            
+
             // 해당 ID들로 문제를 불러오기
             const response = await fetch('/api/questions', {
                 method: 'POST',
@@ -148,11 +148,11 @@ export default function TestPage() {
                 },
                 body: JSON.stringify({ questionIds }),
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 // 원래 순서대로 정렬
-                const sortedQuestions = questionIds.map(id => 
+                const sortedQuestions = questionIds.map(id =>
                     data.find((q: Question) => q.id === id)
                 ).filter(Boolean);
                 setQuestions(sortedQuestions);
@@ -223,10 +223,10 @@ export default function TestPage() {
 
     const startTest = async () => {
         setLoading(true);
-        
+
         // Clear any existing progress when starting fresh
         clearProgress();
-        
+
         try {
             const response = await fetch('/api/questions/random?count=65');
             if (response.ok) {
