@@ -50,3 +50,5 @@ next-env.d.ts
 test.py
 invalid_lines.txt
 .vscode/
+database.ipynb
+/prod.db
