@@ -10,7 +10,6 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         // 줄 단위로 분리
         const lines = text.split('\n');
         const elements: React.ReactElement[] = [];
-        let currentIndex = 0;
 
         lines.forEach((line, index) => {
             const trimmedLine = line.trim();
