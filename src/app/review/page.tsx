@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Brain, CheckCircle, XCircle, RefreshCw, Trash2, Calendar, List, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Question {
     id: string;
@@ -393,7 +394,7 @@ export default function ReviewPage() {
                             </div>
                             {expandedExplanations.has(attempt.questionId) && (
                                 <div className="bg-blue-50 border-x border-b border-blue-200 rounded-b-lg p-4">
-                                    <p className="text-blue-800 whitespace-pre-wrap">{attempt.question.explanation}</p>
+                                    <MarkdownRenderer content={attempt.question.explanation} />
                                     {attempt.question.keywords && attempt.question.keywords.length > 0 && (
                                         <div className="mt-3">
                                             <span className="text-sm font-medium text-blue-700">핵심 키워드: </span>

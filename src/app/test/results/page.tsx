@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, ArrowLeft, Trophy, AlertTriangle, ChevronDown, ChevronUp, Brain } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface ScoreResult {
     correctCount: number;
@@ -497,9 +498,7 @@ function TestResultsContent() {
                                                                 <div>
                                                                     <h5 className="font-medium text-gray-900 mb-2">해설</h5>
                                                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                                                        <p className="text-blue-900 whitespace-pre-wrap">
-                                                                            {attempt.question.explanation}
-                                                                        </p>
+                                                                        <MarkdownRenderer content={attempt.question.explanation} />
                                                                     </div>
                                                                 </div>
                                                             )}

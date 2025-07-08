@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Brain, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Question {
     id: string;
@@ -463,9 +464,7 @@ export default function PracticePage() {
                                 <div className="ai-explanation mt-6">
                                     <h3>상세 해설</h3>
                                     <div className="prose prose-sm max-w-none">
-                                        <div className="whitespace-pre-wrap text-gray-700">
-                                            {currentQuestion.explanation}
-                                        </div>
+                                        <MarkdownRenderer content={currentQuestion.explanation} />
                                         {currentQuestion.keywords && currentQuestion.keywords.length > 0 && (
                                             <div className="mt-4">
                                                 <h4 className="font-medium text-gray-900 mb-2">핵심 키워드</h4>
