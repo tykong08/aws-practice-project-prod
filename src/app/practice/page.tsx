@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +33,7 @@ interface User {
 
 export default function PracticePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [user, setUser] = useState<User | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -46,6 +47,10 @@ export default function PracticePage() {
     const [questionStartTime, setQuestionStartTime] = useState<Date | null>(null);
     const [score, setScore] = useState({ correct: 0, total: 0 });
     const [showExplanation, setShowExplanation] = useState(false);
+    
+    // Retry mode state
+    const isRetryMode = searchParams.get('mode') === 'retry';
+    const [retryQuestionIds, setRetryQuestionIds] = useState<string[]>([]);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -54,7 +59,33 @@ export default function PracticePage() {
         } else {
             router.push('/login');
         }
-    }, [router]);
+
+        // Check for retry mode and load question IDs
+        if (isRetryMode) {
+            const storedQuestionIds = localStorage.getItem('retryQuestionIds');
+            if (storedQuestionIds) {
+                try {
+                    const questionIds = JSON.parse(storedQuestionIds);
+                    setRetryQuestionIds(questionIds);
+                    setQuestionCount(questionIds.length);
+                    // Clean up localStorage after loading
+                    localStorage.removeItem('retryQuestionIds');
+                } catch (error) {
+                    console.error('Error parsing retry question IDs:', error);
+                    router.push('/practice'); // Fallback to normal mode
+                }
+            } else {
+                router.push('/practice'); // No retry data, go to normal mode
+            }
+        }
+    }, [router, isRetryMode]);
+
+    // Auto-start practice in retry mode
+    useEffect(() => {
+        if (isRetryMode && retryQuestionIds.length > 0 && user && !practiceStarted) {
+            startPractice();
+        }
+    }, [isRetryMode, retryQuestionIds, user, practiceStarted]);
 
     const currentQuestion = questions[currentQuestionIndex];
 
@@ -69,7 +100,22 @@ export default function PracticePage() {
     const startPractice = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/questions/random?count=${questionCount}`);
+            let response;
+            
+            if (isRetryMode && retryQuestionIds.length > 0) {
+                // Fetch specific questions for retry mode
+                response = await fetch('/api/questions/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ questionIds: retryQuestionIds }),
+                });
+            } else {
+                // Fetch random questions for normal mode
+                response = await fetch(`/api/questions/random?count=${questionCount}`);
+            }
+            
             if (response.ok) {
                 const data = await response.json();
                 setQuestions(data);
@@ -189,7 +235,8 @@ export default function PracticePage() {
         } else {
             // Practice completed - calculate total time spent
             const totalTimeSpent = startTime ? Math.floor((new Date().getTime() - startTime.getTime()) / 1000) : 0;
-            router.push(`/practice/results?correct=${score.correct + (isCurrentCorrect() ? 1 : 0)}&total=${questions.length}&timeSpent=${totalTimeSpent}`);
+            const retryParam = isRetryMode ? '&retry=true' : '';
+            router.push(`/practice/results?correct=${score.correct + (isCurrentCorrect() ? 1 : 0)}&total=${questions.length}&timeSpent=${totalTimeSpent}${retryParam}`);
         }
     };
 
@@ -236,6 +283,22 @@ export default function PracticePage() {
     };
 
     if (!practiceStarted) {
+        if (isRetryMode) {
+            // Auto-starting, show loading screen
+            return (
+                <div className="min-h-screen bg-white flex items-center justify-center">
+                    <Card className="border border-gray-200">
+                        <CardContent className="p-6">
+                            <div className="flex items-center space-x-2">
+                                <RefreshCw className="h-5 w-5 animate-spin" />
+                                <span className="text-gray-600">틀린 문제들을 불러오는 중...</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        }
+
         return (
             <div className="min-h-screen bg-white">
                 <div className="container mx-auto px-4 py-8">
@@ -326,10 +389,18 @@ export default function PracticePage() {
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
-                    <Link href="/" className="nav-btn-secondary text-decoration-none">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        홈으로 돌아가기
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="nav-btn-secondary text-decoration-none">
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            홈으로 돌아가기
+                        </Link>
+                        {isRetryMode && (
+                            <div className="flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-lg">
+                                <RefreshCw className="h-4 w-4" />
+                                <span className="text-sm font-medium">틀린 문제 재시도 모드</span>
+                            </div>
+                        )}
+                    </div>
                     <div className="text-sm text-gray-600">
                         {currentQuestionIndex + 1} / {questions.length}
                     </div>

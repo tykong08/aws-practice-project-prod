@@ -245,6 +245,21 @@ export default function ReviewPage() {
         setClearingAttempts(false);
     };
 
+    const retryAllIncorrectQuestions = () => {
+        if (incorrectAttempts.length === 0) return;
+
+        // 유니크한 문제 ID들만 추출
+        const uniqueQuestionIds = Array.from(new Set(
+            incorrectAttempts.map(attempt => attempt.questionId)
+        ));
+
+        // localStorage에 저장하여 practice 페이지로 전달
+        localStorage.setItem('retryQuestionIds', JSON.stringify(uniqueQuestionIds));
+        
+        // practice 페이지로 이동 (retry 모드 표시)
+        router.push('/practice?mode=retry');
+    };
+
     // Group attempts by date
     const groupAttemptsByDate = (attempts: IncorrectAttempt[]) => {
         const grouped = new Map<string, IncorrectAttempt[]>();
@@ -470,6 +485,13 @@ export default function ReviewPage() {
                                 총 {incorrectAttempts.length}개의 틀린 문제가 있습니다
                             </div>
                             <div className="flex gap-2">
+                                <Button
+                                    onClick={() => retryAllIncorrectQuestions()}
+                                    className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                                >
+                                    <RefreshCw className="h-4 w-4" />
+                                    틀린 문제 모두 재시도
+                                </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"

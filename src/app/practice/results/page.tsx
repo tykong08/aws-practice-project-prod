@@ -11,6 +11,7 @@ function ResultsContent() {
     const searchParams = useSearchParams();
     const correct = parseInt(searchParams.get('correct') || '0');
     const total = parseInt(searchParams.get('total') || '0');
+    const isRetryMode = searchParams.get('retry') === 'true';
 
     const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
 
@@ -37,8 +38,15 @@ function ResultsContent() {
                             <div className="mx-auto mb-4">
                                 <Trophy className={`h-16 w-16 ${getScoreColor(percentage)}`} />
                             </div>
-                            <CardTitle className="text-3xl mb-2">연습 완료!</CardTitle>
+                            <CardTitle className="text-3xl mb-2">
+                                {isRetryMode ? '틀린 문제 재시도 완료!' : '연습 완료!'}
+                            </CardTitle>
                             <CardDescription className="text-lg">
+                                {isRetryMode && (
+                                    <div className="mb-2 text-orange-600 font-medium">
+                                        틀린 문제들을 다시 풀어보셨습니다
+                                    </div>
+                                )}
                                 {getScoreMessage(percentage)}
                             </CardDescription>
                         </CardHeader>
@@ -79,6 +87,9 @@ function ResultsContent() {
                             <div className="bg-gray-50 rounded-lg p-4">
                                 <h3 className="font-medium text-gray-900 mb-2">성과 분석</h3>
                                 <div className="text-sm text-gray-600 space-y-1">
+                                    {isRetryMode && (
+                                        <p className="text-orange-600 font-medium">🔄 이전에 틀린 문제들을 재시도하셨습니다.</p>
+                                    )}
                                     {percentage >= 80 && (
                                         <p>✅ AWS SAA-C01 시험에 대한 이해도가 높습니다.</p>
                                     )}
@@ -88,8 +99,11 @@ function ResultsContent() {
                                     {percentage < 60 && (
                                         <p>📚 기본 개념을 더 공부하시는 것을 추천합니다.</p>
                                     )}
-                                    {correct < total && (
+                                    {correct < total && !isRetryMode && (
                                         <p>🔄 틀린 문제를 복습해보세요.</p>
+                                    )}
+                                    {isRetryMode && correct < total && (
+                                        <p>📚 아직 어려운 문제들이 있습니다. 계속 학습해보세요!</p>
                                     )}
                                 </div>
                             </div>
