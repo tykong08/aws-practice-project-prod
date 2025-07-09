@@ -12,6 +12,7 @@ function ResultsContent() {
     const correct = parseInt(searchParams.get('correct') || '0');
     const total = parseInt(searchParams.get('total') || '0');
     const isRetryMode = searchParams.get('retry') === 'true';
+    const retryDate = searchParams.get('date');
 
     const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
 
@@ -44,7 +45,10 @@ function ResultsContent() {
                             <CardDescription className="text-lg">
                                 {isRetryMode && (
                                     <div className="mb-2 text-orange-600 font-medium">
-                                        틀린 문제들을 다시 풀어보셨습니다
+                                        {retryDate 
+                                            ? `${decodeURIComponent(retryDate)} 틀린 문제들을 다시 풀어보셨습니다`
+                                            : '틀린 문제들을 다시 풀어보셨습니다'
+                                        }
                                     </div>
                                 )}
                                 {getScoreMessage(percentage)}

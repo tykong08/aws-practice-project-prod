@@ -243,9 +243,7 @@ export default function ReviewPage() {
             alert('틀린 문제 삭제 중 오류가 발생했습니다.');
         }
         setClearingAttempts(false);
-    };
-
-    const retryAllIncorrectQuestions = () => {
+    };    const retryAllIncorrectQuestions = () => {
         if (incorrectAttempts.length === 0) return;
 
         // 유니크한 문제 ID들만 추출
@@ -255,9 +253,24 @@ export default function ReviewPage() {
 
         // localStorage에 저장하여 practice 페이지로 전달
         localStorage.setItem('retryQuestionIds', JSON.stringify(uniqueQuestionIds));
-
+        
         // practice 페이지로 이동 (retry 모드 표시)
         router.push('/practice?mode=retry');
+    };
+
+    const retryQuestionsByDate = (date: string, attempts: IncorrectAttempt[]) => {
+        if (attempts.length === 0) return;
+
+        // 해당 날짜의 유니크한 문제 ID들만 추출
+        const uniqueQuestionIds = Array.from(new Set(
+            attempts.map(attempt => attempt.questionId)
+        ));
+
+        // localStorage에 저장하여 practice 페이지로 전달
+        localStorage.setItem('retryQuestionIds', JSON.stringify(uniqueQuestionIds));
+        
+        // practice 페이지로 이동 (retry 모드 표시)
+        router.push(`/practice?mode=retry&date=${encodeURIComponent(date)}`);
     };
 
     // Group attempts by date
@@ -557,18 +570,31 @@ export default function ReviewPage() {
                             <div className="space-y-4">
                                 {Array.from(groupedAttempts!.entries()).map(([date, attempts]) => (
                                     <div key={date} className="border border-gray-200 rounded-lg overflow-hidden">
-                                        <div
-                                            className="flex items-center gap-2 p-4 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
-                                            onClick={() => toggleDate(date)}
-                                        >
-                                            {expandedDates.has(date) ? (
-                                                <ChevronDown className="h-5 w-5 text-gray-500" />
-                                            ) : (
-                                                <ChevronRight className="h-5 w-5 text-gray-500" />
-                                            )}
-                                            <Calendar className="h-5 w-5 text-gray-500" />
-                                            <h3 className="text-lg font-semibold text-gray-900">{date}</h3>
-                                            <span className="text-sm text-gray-500">({attempts.length}개 문제)</span>
+                                        <div className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div 
+                                                className="flex items-center gap-2 cursor-pointer flex-1"
+                                                onClick={() => toggleDate(date)}
+                                            >
+                                                {expandedDates.has(date) ? (
+                                                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                                                ) : (
+                                                    <ChevronRight className="h-5 w-5 text-gray-500" />
+                                                )}
+                                                <Calendar className="h-5 w-5 text-gray-500" />
+                                                <h3 className="text-lg font-semibold text-gray-900">{date}</h3>
+                                                <span className="text-sm text-gray-500">({attempts.length}개 문제)</span>
+                                            </div>
+                                            <Button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    retryQuestionsByDate(date, attempts);
+                                                }}
+                                                size="sm"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
+                                            >
+                                                <RefreshCw className="h-3 w-3" />
+                                                이 날짜 재시도
+                                            </Button>
                                         </div>
                                         {expandedDates.has(date) && (
                                             <div className="p-4 space-y-4 bg-white">

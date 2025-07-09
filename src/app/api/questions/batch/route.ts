@@ -14,16 +14,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Remove duplicates from the input array for safety
+        const uniqueQuestionIds = Array.from(new Set(questionIds));
+
+        console.log(`📝 Fetching ${uniqueQuestionIds.length} unique questions from ${questionIds.length} requested IDs`);
+
         const questions = await prisma.question.findMany({
             where: {
                 id: {
-                    in: questionIds
+                    in: uniqueQuestionIds
                 }
             },
             orderBy: {
                 id: 'asc'
             }
         });
+
+        console.log(`✅ Found ${questions.length} questions in database`);
 
         // Transform the data to match the expected format
         const transformedQuestions = questions.map(question => ({

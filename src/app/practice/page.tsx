@@ -50,6 +50,7 @@ function PracticeContent() {
 
     // Retry mode state
     const isRetryMode = searchParams.get('mode') === 'retry';
+    const retryDate = searchParams.get('date');
     const [retryQuestionIds, setRetryQuestionIds] = useState<string[]>([]);
 
     // Helper function to get available options for a question
@@ -236,7 +237,8 @@ function PracticeContent() {
             // Practice completed - calculate total time spent
             const totalTimeSpent = startTime ? Math.floor((new Date().getTime() - startTime.getTime()) / 1000) : 0;
             const retryParam = isRetryMode ? '&retry=true' : '';
-            router.push(`/practice/results?correct=${score.correct + (isCurrentCorrect() ? 1 : 0)}&total=${questions.length}&timeSpent=${totalTimeSpent}${retryParam}`);
+            const dateParam = retryDate ? `&date=${encodeURIComponent(retryDate)}` : '';
+            router.push(`/practice/results?correct=${score.correct + (isCurrentCorrect() ? 1 : 0)}&total=${questions.length}&timeSpent=${totalTimeSpent}${retryParam}${dateParam}`);
         }
     };
 
@@ -397,7 +399,12 @@ function PracticeContent() {
                         {isRetryMode && (
                             <div className="flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-lg">
                                 <RefreshCw className="h-4 w-4" />
-                                <span className="text-sm font-medium">틀린 문제 재시도 모드</span>
+                                <span className="text-sm font-medium">
+                                    {retryDate 
+                                        ? `${decodeURIComponent(retryDate)} 틀린 문제 재시도`
+                                        : '틀린 문제 재시도 모드'
+                                    }
+                                </span>
                             </div>
                         )}
                     </div>
