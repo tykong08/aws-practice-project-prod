@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
         // Ensure we don't request more questions than available
         const count = Math.min(requestedCount, totalQuestions);
 
-        // If requested count is more than available, we'll return all available questions
         let questions;
+        
         if (count >= totalQuestions) {
             // Get all questions and shuffle them
             questions = await prisma.question.findMany({
@@ -21,23 +21,47 @@ export async function GET(request: NextRequest) {
                     id: 'asc'
                 }
             });
-            // Shuffle the array
+            // Fisher-Yates shuffle algorithm for better randomness
             for (let i = questions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questions[i], questions[j]] = [questions[j], questions[i]];
             }
         } else {
-            // Generate random skip value
-            const skip = Math.max(0, Math.floor(Math.random() * Math.max(0, totalQuestions - count)));
+            // Get all question IDs first
+            const allQuestions = await prisma.question.findMany({
+                select: { id: true },
+                orderBy: { id: 'asc' }
+            });
 
-            // Get random questions
+            // Create array of all IDs and shuffle them
+            const allIds = allQuestions.map(q => q.id);
+            
+            // Fisher-Yates shuffle to get truly random selection
+            for (let i = allIds.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
+            }
+
+            // Take the first 'count' shuffled IDs (guaranteed no duplicates)
+            const selectedIds = allIds.slice(0, count);
+
+            // Fetch the actual questions using the randomly selected IDs
             questions = await prisma.question.findMany({
-                take: count,
-                skip: skip,
+                where: {
+                    id: {
+                        in: selectedIds
+                    }
+                },
                 orderBy: {
-                    id: 'asc' // Consistent ordering for pagination
+                    id: 'asc'
                 }
             });
+
+            // Shuffle the final questions array to randomize the order
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
         }
 
         // Transform the questions to include parsed correctAnswers
