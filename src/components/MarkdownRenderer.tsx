@@ -13,7 +13,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
         lines.forEach((line, index) => {
             const trimmedLine = line.trim();
-            
+
             // 빈 줄 처리
             if (!trimmedLine) {
                 elements.push(<br key={`br-${index}`} />);
@@ -65,8 +65,8 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             // 일반 문단 처리
             else {
                 elements.push(
-                    <p key={index} className="mb-3 leading-relaxed" 
-                       dangerouslySetInnerHTML={{ __html: formatInlineText(trimmedLine) }} />
+                    <p key={index} className="mb-3 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: formatInlineText(trimmedLine) }} />
                 );
             }
         });
@@ -84,7 +84,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             // 인라인 코드 `code`
             .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">$1</code>')
             // AWS 서비스명 강조 (대문자로 시작하는 AWS 관련 용어)
-            .replace(/\b(AWS|Amazon|EC2|S3|RDS|VPC|IAM|CloudFormation|Lambda|ECS|EKS|ElastiCache|DynamoDB|Aurora|CloudWatch|SNS|SQS|API Gateway|Load Balancer|Auto Scaling|Route 53|CloudFront|EBS|EFS|FSx)\b/g, 
+            .replace(/\b(AWS|Amazon|EC2|S3|RDS|VPC|IAM|CloudFormation|Lambda|ECS|EKS|ElastiCache|DynamoDB|Aurora|CloudWatch|SNS|SQS|API Gateway|Load Balancer|Auto Scaling|Route 53|CloudFront|EBS|EFS|FSx)\b/g,
                 '<span class="font-semibold text-orange-600">$1</span>');
     };
 

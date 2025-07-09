@@ -255,7 +255,7 @@ export default function ReviewPage() {
 
         // localStorage에 저장하여 practice 페이지로 전달
         localStorage.setItem('retryQuestionIds', JSON.stringify(uniqueQuestionIds));
-        
+
         // practice 페이지로 이동 (retry 모드 표시)
         router.push('/practice?mode=retry');
     };

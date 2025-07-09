@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +31,7 @@ interface User {
     name: string;
 }
 
-export default function PracticePage() {
+function PracticeContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [user, setUser] = useState<User | null>(null);
@@ -47,7 +47,7 @@ export default function PracticePage() {
     const [questionStartTime, setQuestionStartTime] = useState<Date | null>(null);
     const [score, setScore] = useState({ correct: 0, total: 0 });
     const [showExplanation, setShowExplanation] = useState(false);
-    
+
     // Retry mode state
     const isRetryMode = searchParams.get('mode') === 'retry';
     const [retryQuestionIds, setRetryQuestionIds] = useState<string[]>([]);
@@ -64,7 +64,7 @@ export default function PracticePage() {
         setLoading(true);
         try {
             let response;
-            
+
             if (isRetryMode && retryQuestionIds.length > 0) {
                 // Fetch specific questions for retry mode
                 response = await fetch('/api/questions/batch', {
@@ -78,7 +78,7 @@ export default function PracticePage() {
                 // Fetch random questions for normal mode
                 response = await fetch(`/api/questions/random?count=${questionCount}`);
             }
-            
+
             if (response.ok) {
                 const data = await response.json();
                 setQuestions(data);
@@ -559,6 +559,25 @@ export default function PracticePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PracticePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <Card className="border border-gray-200">
+                    <CardContent className="p-6">
+                        <div className="flex items-center space-x-2">
+                            <RefreshCw className="h-5 w-5 animate-spin" />
+                            <span className="text-gray-600">페이지를 불러오는 중...</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        }>
+            <PracticeContent />
+        </Suspense>
     );
 }
 
