@@ -75,22 +75,8 @@ export default function ReviewPage() {
             const response = await fetch(`/api/attempts/incorrect?userId=${user.id}`);
             if (response.ok) {
                 const data = await response.json();
-                const processedData = data.map((attempt: IncorrectAttempt) => {
-                    return {
-                        ...attempt,
-                        selectedAnswers: Array.isArray(attempt.selectedAnswers)
-                            ? attempt.selectedAnswers.map((ans: string | number) => typeof ans === 'string' ? parseInt(ans, 10) : ans)
-                            : [],
-                        question: attempt.question ? {
-                            ...attempt.question,
-                            correctAnswers: Array.isArray(attempt.question.correctAnswers)
-                                ? attempt.question.correctAnswers.map((ans: string | number) => typeof ans === 'string' ? parseInt(ans, 10) : ans)
-                                : []
-                        } : attempt.question
-                    };
-                });
-
-                setIncorrectAttempts(processedData);
+                // API에서 이미 파싱된 데이터를 받으므로 추가 변환 불필요
+                setIncorrectAttempts(data);
             } else {
                 console.error('Failed to fetch incorrect attempts');
             }

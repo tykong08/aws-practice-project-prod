@@ -82,6 +82,16 @@ function PracticeContent() {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('📚 Questions loaded:', {
+                    isRetryMode,
+                    questionCount: data.length,
+                    firstQuestion: data[0] ? {
+                        id: data[0].id,
+                        correctAnswers: data[0].correctAnswers,
+                        correctAnswersType: typeof data[0].correctAnswers,
+                        correctAnswersLength: data[0].correctAnswers?.length
+                    } : null
+                });
                 setQuestions(data);
                 setStartTime(new Date());
                 setQuestionStartTime(new Date());
@@ -136,8 +146,25 @@ function PracticeContent() {
     const handleAnswerSelect = (optionIndex: number) => {
         if (showResult) return;
 
+        console.log('🎯 handleAnswerSelect called with:', {
+            optionIndex,
+            currentQuestion: currentQuestion ? {
+                id: currentQuestion.id,
+                correctAnswers: currentQuestion.correctAnswers,
+                correctAnswersLength: currentQuestion.correctAnswers.length,
+                correctAnswersType: typeof currentQuestion.correctAnswers
+            } : null,
+            selectedAnswers
+        });
+
         setSelectedAnswers(prev => {
             const maxSelections = currentQuestion?.correctAnswers.length || 1;
+            
+            console.log('📊 Selection logic:', {
+                maxSelections,
+                prevLength: prev.length,
+                alreadySelected: prev.includes(optionIndex)
+            });
 
             if (prev.includes(optionIndex)) {
                 // 이미 선택된 답안을 다시 클릭하면 선택 해제
@@ -157,7 +184,12 @@ function PracticeContent() {
 
     const submitAnswer = async () => {
         console.log('🔍 submitAnswer called with:', {
-            currentQuestion: !!currentQuestion,
+            currentQuestion: currentQuestion ? {
+                id: currentQuestion.id,
+                correctAnswers: currentQuestion.correctAnswers,
+                correctAnswersType: typeof currentQuestion.correctAnswers,
+                correctAnswersLength: currentQuestion.correctAnswers.length
+            } : null,
             selectedAnswersLength: selectedAnswers.length,
             selectedAnswers,
             user: !!user,
@@ -176,7 +208,18 @@ function PracticeContent() {
 
         const isCorrect =
             selectedAnswers.length === currentQuestion.correctAnswers.length &&
-            selectedAnswers.every(ans => currentQuestion.correctAnswers.includes(ans));
+            selectedAnswers.every(ans => currentQuestion.correctAnswers.includes(ans)) &&
+            currentQuestion.correctAnswers.every(ans => selectedAnswers.includes(ans));
+
+        console.log('🎯 Answer validation:', {
+            selectedAnswers,
+            correctAnswers: currentQuestion.correctAnswers,
+            selectedLength: selectedAnswers.length,
+            correctLength: currentQuestion.correctAnswers.length,
+            everySelectedInCorrect: selectedAnswers.every(ans => currentQuestion.correctAnswers.includes(ans)),
+            everyCorrectInSelected: currentQuestion.correctAnswers.every(ans => selectedAnswers.includes(ans)),
+            finalResult: isCorrect
+        });
 
         const timeSpent = Math.floor((new Date().getTime() - questionStartTime.getTime()) / 1000);
 
@@ -281,7 +324,8 @@ function PracticeContent() {
     const isCurrentCorrect = () => {
         if (!currentQuestion) return false;
         return selectedAnswers.length === currentQuestion.correctAnswers.length &&
-            selectedAnswers.every(ans => currentQuestion.correctAnswers.includes(ans));
+            selectedAnswers.every(ans => currentQuestion.correctAnswers.includes(ans)) &&
+            currentQuestion.correctAnswers.every(ans => selectedAnswers.includes(ans));
     };
 
     if (!practiceStarted) {

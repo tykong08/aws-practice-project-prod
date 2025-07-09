@@ -35,9 +35,8 @@ export async function POST(request: NextRequest) {
         // Transform the data to match the expected format
         const transformedQuestions = questions.map(question => ({
             ...question,
-            correctAnswers: Array.isArray(question.correctAnswers)
-                ? question.correctAnswers.map((ans: string | number) => typeof ans === 'string' ? parseInt(ans, 10) : ans)
-                : []
+            correctAnswers: JSON.parse(question.correctAnswers),
+            keywords: question.keywords ? JSON.parse(question.keywords) : []
         }));
 
         return NextResponse.json(transformedQuestions);
