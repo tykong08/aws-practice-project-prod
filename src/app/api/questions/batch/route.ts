@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         const transformedQuestions = questions.map(question => ({
             ...question,
             correctAnswers: Array.isArray(question.correctAnswers) 
-                ? question.correctAnswers.map((ans: any) => typeof ans === 'string' ? parseInt(ans, 10) : ans)
+                ? question.correctAnswers.map((ans: string | number) => typeof ans === 'string' ? parseInt(ans, 10) : ans)
                 : []
         }));
 

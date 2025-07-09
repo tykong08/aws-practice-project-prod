@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +52,49 @@ export default function PracticePage() {
     const isRetryMode = searchParams.get('mode') === 'retry';
     const [retryQuestionIds, setRetryQuestionIds] = useState<string[]>([]);
 
+    // Helper function to get available options for a question
+    const getAvailableOptions = (question: Question) => {
+        const options = [question.option1, question.option2, question.option3, question.option4];
+        if (question.option5) options.push(question.option5);
+        if (question.option6) options.push(question.option6);
+        return options;
+    };
+
+    const startPractice = useCallback(async () => {
+        setLoading(true);
+        try {
+            let response;
+            
+            if (isRetryMode && retryQuestionIds.length > 0) {
+                // Fetch specific questions for retry mode
+                response = await fetch('/api/questions/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ questionIds: retryQuestionIds }),
+                });
+            } else {
+                // Fetch random questions for normal mode
+                response = await fetch(`/api/questions/random?count=${questionCount}`);
+            }
+            
+            if (response.ok) {
+                const data = await response.json();
+                setQuestions(data);
+                setStartTime(new Date());
+                setQuestionStartTime(new Date());
+                setPracticeStarted(true);
+            } else {
+                alert('문제를 불러오는데 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+            alert('문제를 불러오는데 실패했습니다.');
+        }
+        setLoading(false);
+    }, [isRetryMode, retryQuestionIds, questionCount]);
+
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) {
@@ -85,52 +128,9 @@ export default function PracticePage() {
         if (isRetryMode && retryQuestionIds.length > 0 && user && !practiceStarted) {
             startPractice();
         }
-    }, [isRetryMode, retryQuestionIds, user, practiceStarted]);
+    }, [isRetryMode, retryQuestionIds, user, practiceStarted, startPractice]);
 
     const currentQuestion = questions[currentQuestionIndex];
-
-    // Helper function to get available options for a question
-    const getAvailableOptions = (question: Question) => {
-        const options = [question.option1, question.option2, question.option3, question.option4];
-        if (question.option5) options.push(question.option5);
-        if (question.option6) options.push(question.option6);
-        return options;
-    };
-
-    const startPractice = async () => {
-        setLoading(true);
-        try {
-            let response;
-            
-            if (isRetryMode && retryQuestionIds.length > 0) {
-                // Fetch specific questions for retry mode
-                response = await fetch('/api/questions/batch', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ questionIds: retryQuestionIds }),
-                });
-            } else {
-                // Fetch random questions for normal mode
-                response = await fetch(`/api/questions/random?count=${questionCount}`);
-            }
-            
-            if (response.ok) {
-                const data = await response.json();
-                setQuestions(data);
-                setStartTime(new Date());
-                setQuestionStartTime(new Date());
-                setPracticeStarted(true);
-            } else {
-                alert('문제를 불러오는데 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('Error fetching questions:', error);
-            alert('문제를 불러오는데 실패했습니다.');
-        }
-        setLoading(false);
-    };
 
     const handleAnswerSelect = (optionIndex: number) => {
         if (showResult) return;
